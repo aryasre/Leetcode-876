@@ -1,0 +1,125 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct cache_node {
+    int key;
+    int data;
+    struct cache_node *prev;
+    struct cache_node *next;
+} cache_node_t;
+
+typedef struct {
+    cache_node_t *head; // MRU
+    cache_node_t *tail; // LRU
+    cache_node_t **nodes;
+    int count;
+    int capacity;
+} LRUCache;
+
+unsigned int hash(int key, int capacity) {
+    return (unsigned int)key % capacity;
+}
+
+LRUCache* lRUCacheCreate(int capacity) {
+    LRUCache *obj = malloc(sizeof(LRUCache));
+    if (!obj) return NULL;
+    obj->head = NULL;
+    obj->tail = NULL;
+    obj->count = 0;
+    obj->capacity = capacity;
+    obj->nodes = calloc(capacity, sizeof(cache_node_t*));
+    return obj;
+}
+
+void move_to_front(LRUCache *obj, cache_node_t *node) {
+    if (obj->head == node) return;
+
+    if (node->prev) node->prev->next = node->next;
+    if (node->next) node->next->prev = node->prev;
+    if (obj->tail == node) obj->tail = node->prev;
+
+    node->prev = NULL;
+    node->next = obj->head;
+    if (obj->head) obj->head->prev = node;
+    obj->head = node;
+
+    if (!obj->tail) obj->tail = node;
+}
+
+int lRUCacheGet(LRUCache* obj, int key) {
+    int index = hash(key, obj->capacity);
+    cache_node_t *current = obj->nodes[index];
+    while (current) {
+        if (current->key == key) {
+            move_to_front(obj, current);
+            return current->data;
+        }
+        current = current->next;
+    }
+    return -1;
+}
+
+cache_node_t* remove_lru(LRUCache *obj) {
+    if (!obj->tail) return NULL;
+
+    cache_node_t *lru = obj->tail;
+    if (obj->tail->prev) {
+        obj->tail->prev->next = NULL;
+    } else {
+        obj->head = NULL;
+    }
+    obj->tail = obj->tail->prev;
+    return lru;
+}
+
+void lRUCachePut(LRUCache* obj, int key, int value) {
+    int index = hash(key, obj->capacity);
+
+    int existing = lRUCacheGet(obj, key);
+    if (existing != -1) {
+        cache_node_t *current = obj->nodes[index];
+        while (current && current->key != key) {
+            current = current->next;
+        }
+        if (current) {
+            current->data = value;
+        }
+        return;
+    }
+
+    cache_node_t *new_node = malloc(sizeof(cache_node_t));
+    if (!new_node) return;
+
+    new_node->key = key;
+    new_node->data = value;
+    new_node->prev = new_node->next = NULL;
+
+    if (obj->count >= obj->capacity) {
+        cache_node_t *lru = remove_lru(obj);
+        if (lru) {
+            int lru_index = hash(lru->key, obj->capacity);
+            if (obj->nodes[lru_index] == lru) {
+                obj->nodes[lru_index] = lru->next;
+            }
+            free(lru);
+            obj->count--;
+        }
+    }
+
+    move_to_front(obj, new_node);
+    new_node->next = obj->nodes[index];
+    obj->nodes[index] = new_node;
+    obj->count++;
+}
+
+void lRUCacheFree(LRUCache* obj) {
+    if (!obj) return;
+    cache_node_t *current = obj->head;
+    while (current) {
+        cache_node_t *temp = current;
+        current = current->next;
+        free(temp);
+    }
+    free(obj->nodes);
+    free(obj);
+}
