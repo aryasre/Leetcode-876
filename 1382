@@ -1,0 +1,46 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+// Step 1: Inorder Traversal to collect values
+void inorder(struct TreeNode* root, int* arr, int* size) {
+    if (!root) return;
+    inorder(root->left, arr, size);
+    arr[(*size)++] = root->val;
+    inorder(root->right, arr, size);
+}
+
+// Step 2: Build Balanced BST from sorted array
+struct TreeNode* buildBST(int* arr, int start, int end) {
+    if (start > end) return NULL;
+
+    int mid = (start + end) / 2;
+    struct TreeNode* node = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+    node->val = arr[mid];
+    node->left = buildBST(arr, start, mid - 1);
+    node->right = buildBST(arr, mid + 1, end);
+    return node;
+}
+
+struct TreeNode* balanceBST(struct TreeNode* root) {
+    // store inorder values
+    int* arr = (int*)malloc(10000 * sizeof(int)); // assuming max 10^4 nodes
+    int size = 0;
+    inorder(root, arr, &size);
+
+    // build balanced BST
+    return buildBST(arr, 0, size - 1);
+}
