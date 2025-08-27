@@ -1,0 +1,99 @@
+typedef struct {
+    int *memory;
+    size_t total_size;
+    size_t used;
+    size_t block_size;
+} Allocator;
+
+Allocator* allocatorCreate(int n) {
+    Allocator *pool = malloc(sizeof(Allocator));
+    if(!pool) return NULL;
+    
+    pool->memory = calloc(n, sizeof(int));
+    if(!pool->memory) {
+        free(pool);
+        return NULL;
+    }
+    
+    pool->total_size = n;
+    pool->used = 0;
+    pool->block_size = 1;
+    
+    return pool;
+}
+
+int allocatorAllocate(Allocator* obj, int size, int mID) {
+    // First try to find contiguous free space
+    int best_start = -1;
+    int current_start = -1;
+    int current_size = 0;
+    
+    for(int i = 0; i < obj->total_size; i++) {
+        if(obj->memory[i] == 0) {
+            if(current_start == -1) current_start = i;
+            current_size++;
+            
+            if(current_size >= size) {
+                best_start = current_start;
+                break; // Found first fit
+            }
+        } else {
+            current_start = -1;
+            current_size = 0;
+        }
+    }
+    
+    if(best_start != -1) {
+        // Mark the allocated blocks
+        for(int i = best_start; i < best_start + size; i++) {
+            obj->memory[i] = mID;
+        }
+        return best_start;
+    }
+    
+    // If no contiguous space found, check if we can allocate at end
+    if(obj->used + size > obj->total_size) {
+        return -1;
+    }
+    
+    // Check if there are any free blocks between used and total_size
+    for(int i = obj->used; i < obj->total_size; i++) {
+        if(obj->memory[i] != 0) {
+            return -1; // No contiguous space at end
+        }
+    }
+    
+    int start_index = obj->used;
+    for(int i = 0; i < size; i++) {
+        obj->memory[obj->used + i] = mID;
+    }
+    obj->used += size;
+    return start_index;
+}
+
+int allocatorFreeMemory(Allocator* obj, int mID) {
+    int freed_blocks = 0;
+    for(size_t i = 0; i < obj->total_size; i++) {
+        if(obj->memory[i] == mID) {
+            obj->memory[i] = 0;
+            freed_blocks++;
+        }
+    }
+    return freed_blocks;
+}
+
+void allocatorFree(Allocator* obj) {
+    if(obj) {
+        free(obj->memory);
+        free(obj);
+    }
+}
+/**
+ * Your Allocator struct will be instantiated and called as such:
+ * Allocator* obj = allocatorCreate(n);
+ * int param_1 = allocatorAllocate(obj, size, mID);
+ 
+ * int param_2 = allocatorFreeMemory(obj, mID);
+ 
+ * allocatorFree(obj);
+*/
