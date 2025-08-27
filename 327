@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+typedef struct Node {
+    long val;
+    int count;           // duplicates count
+    int size;            // subtree size
+    struct Node *left, *right;
+} Node;
+
+Node* newNode(long val) {
+    Node* node = (Node*)malloc(sizeof(Node));
+    node->val = val;
+    node->count = 1;
+    node->size = 1;
+    node->left = node->right = NULL;
+    return node;
+}
+
+// Update size of subtree
+int getSize(Node* root) {
+    return root ? root->size : 0;
+}
+void updateSize(Node* root) {
+    if (root)
+        root->size = root->count + getSize(root->left) + getSize(root->right);
+}
+
+Node* insert(Node* root, long val) {
+    if (!root) return newNode(val);
+    if (val == root->val) {
+        root->count++;
+    } else if (val < root->val) {
+        root->left = insert(root->left, val);
+    } else {
+        root->right = insert(root->right, val);
+    }
+    updateSize(root);
+    return root;
+}
+
+
+int countLE(Node* root, long target) {
+    if (!root) return 0;
+    if (target == root->val)
+        return getSize(root->left) + root->count;
+    else if (target < root->val)
+        return countLE(root->left, target);
+    else
+        return getSize(root->left) + root->count + countLE(root->right, target);
+}
+
+int countRangeSum(int* nums, int numsSize, int lower, int upper) {
+    long prefix = 0;
+    int ans = 0;
+    Node* root = NULL;
+
+
+    root = insert(root, 0);
+
+    for (int i = 0; i < numsSize; i++) {
+        prefix += nums[i];
+
+        
+        int rightCount = countLE(root, prefix - lower);
+        int leftCount = countLE(root, prefix - upper - 1);
+
+        ans += (rightCount - leftCount);
+
+       
+        root = insert(root, prefix);
+    }
+    return ans;
+}
