@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define TABLE_SIZE 1000
+
+typedef struct Node {
+    int key;       // number from array
+    int value;     // index of the number
+    struct Node *next;
+} Node;
+
+Node* hashTable[TABLE_SIZE];
+
+// Hash function (simple modulus)
+int hash(int key) {
+    if (key < 0) key = -key; // handle negative numbers
+    return key % TABLE_SIZE;
+}
+
+// Insert number → index into hash table
+void insertHash(int key, int value) {
+    int index = hash(key);
+    Node *newNode = malloc(sizeof(Node));
+    newNode->key = key;
+    newNode->value = value;
+    newNode->next = hashTable[index];
+    hashTable[index] = newNode;
+}
+
+// Search for number in hash table, return index if found else -1
+int searchHash(int key) {
+    int index = hash(key);
+    Node *temp = hashTable[index];
+    while (temp) {
+        if (temp->key == key)
+            return temp->value;
+        temp = temp->next;
+    }
+    return -1;
+}
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* twoSum(int* nums, int numsSize, int target, int* returnSize) {
+    *returnSize = 2;
+    int *result = malloc(2 * sizeof(int));
+
+    // Initialize hash table
+    for (int i = 0; i < TABLE_SIZE; i++)
+        hashTable[i] = NULL;
+
+    for (int i = 0; i < numsSize; i++) {
+        int complement = target - nums[i];
+        int index = searchHash(complement);
+        if (index != -1) {
+            result[0] = index;
+            result[1] = i;
+            return result;
+        }
+        insertHash(nums[i], i);
+    }
+    return result; // Problem guarantees one solution
+}
