@@ -1,0 +1,109 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+
+#define TABLE_SIZE 1000
+
+struct Node {
+    char key;
+    int value;
+    //int count;
+    struct Node *next;
+};
+
+struct Node* hashTable[TABLE_SIZE];
+
+//hash function
+unsigned int hash(char key)
+{
+    unsigned int hashValue = 0;
+    hashValue = key % TABLE_SIZE;
+
+    return hashValue;
+}
+
+//insert
+void insert(char key, int value)
+{
+    unsigned int index = hash(key);
+
+    struct Node *newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->key = key;
+    newNode->value = value;
+    newNode->next = NULL;
+
+
+    if(hashTable[index] == NULL)
+    {
+        hashTable[index] = newNode;
+    }
+    else
+    {
+        struct Node *temp = hashTable[index];
+        while(temp->next != NULL)
+        {
+            if(temp->key == key)
+            {
+                temp->value = value;
+                free(newNode);
+            }
+            temp = temp->next;
+        }
+    
+         if(temp->key == key)
+            {
+                temp->value = value;
+                free(newNode);
+                return;
+            }
+    
+        temp->next = newNode;
+    }  
+   
+}
+
+//search
+int search(const char key)
+{
+    unsigned int index = hash(key);
+    struct Node *temp = hashTable[index];
+
+    while (temp != NULL)
+    {
+        if(temp->key== key)
+        {
+            return temp->value;
+        }
+        temp = temp->next;
+    }
+    return -1;
+}
+
+
+int firstUniqChar(char* s) 
+{
+
+for(int index = 0;index<TABLE_SIZE;index++)
+{
+    hashTable[index] = NULL;
+}
+
+int freq[256] = {0};
+for(int i = 0;i<strlen(s);i++)
+{ 
+ freq[(unsigned char)s[i]]++;
+  int ret =  search(*s);
+  if(ret == -1)
+    insert(*s,i);
+    
+}
+
+for (int i = 0; s[i] != '\0'; i++) {
+        if (freq[(unsigned char)s[i]] == 1) {
+            return i;
+        }
+    
+}
+
+return -1;
+}
