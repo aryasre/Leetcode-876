@@ -1,0 +1,29 @@
+bool isValid(char* s) {
+    int n = strlen(s);
+    char stack[n];   // stack array
+    int top = -1;    // stack pointer
+    
+    for (int i = 0; i < n; i++) {
+        char c = s[i];
+        
+        // If it's an opening bracket, push to stack
+        if (c == '(' || c == '{' || c == '[') {
+            stack[++top] = c;
+        } 
+        // If it's a closing bracket, check top of stack
+        else {
+            if (top == -1) return false;  // no matching open
+            
+            char open = stack[top--];  // pop
+            
+            if ((c == ')' && open != '(') ||
+                (c == '}' && open != '{') ||
+                (c == ']' && open != '[')) {
+                return false;
+            }
+        }
+    }
+    
+    // If stack is empty, valid
+    return top == -1;
+}
