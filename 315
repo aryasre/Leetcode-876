@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Definition for singly-linked list
+/*
+struct ListNode {
+    int val;
+    struct ListNode *next;
+};
+
+// Definition for a binary tree node
+struct TreeNode {
+    int val;
+    struct TreeNode *left;
+    struct TreeNode *right;
+};
+*/
+
+// Utility function to create new tree node
+struct TreeNode* newTreeNode(int val) {
+    struct TreeNode* node = (struct TreeNode*)malloc(sizeof(struct TreeNode));
+    node->val = val;
+    node->left = NULL;
+    node->right = NULL;
+    return node;
+}
+
+// Function to find the middle element of linked list
+struct ListNode* findMiddle(struct ListNode* head, struct ListNode** prev) {
+    struct ListNode* slow = head;
+    struct ListNode* fast = head;
+    *prev = NULL;
+
+    while (fast && fast->next) {
+        *prev = slow;
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    return slow; // middle node
+}
+
+// Recursive function to convert sorted list to BST
+struct TreeNode* sortedListToBST(struct ListNode* head) {
+    if (!head) return NULL;
+
+    struct ListNode* prev = NULL;
+    struct ListNode* mid = findMiddle(head, &prev);
+
+    struct TreeNode* root = newTreeNode(mid->val);
+
+    // If only one element
+    if (head == mid) return root;
+
+    // Disconnect left half from mid
+    if (prev) prev->next = NULL;
+
+    root->left = sortedListToBST(head);
+    root->right = sortedListToBST(mid->next);
+
+    return root;
+}
