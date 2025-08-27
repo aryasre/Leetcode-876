@@ -1,0 +1,40 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_URLS 10000
+#define MAX_LEN  1005
+
+static char longUrls[MAX_URLS][MAX_LEN];
+static char shortUrls[MAX_URLS][MAX_LEN];
+static int urlCount = 0;
+
+// Encodes a URL to a shortened URL.
+char* encode(char* longUrl) {
+    char shortUrl[MAX_LEN];
+
+    snprintf(shortUrl, sizeof(shortUrl), "http://tinyurl.com/%d", urlCount + 1);
+
+    strncpy(longUrls[urlCount], longUrl, MAX_LEN - 1);
+    longUrls[urlCount][MAX_LEN - 1] = '\0';
+
+    strncpy(shortUrls[urlCount], shortUrl, MAX_LEN - 1);
+    shortUrls[urlCount][MAX_LEN - 1] = '\0';
+
+    urlCount++;
+
+    return strdup(shortUrl);   
+}
+
+// Decodes a shortened URL to its original URL.
+char* decode(char* shortUrl) {
+    for (int i = 0; i < urlCount; i++) {
+        if (strcmp(shortUrls[i], shortUrl) == 0) {
+            return strdup(longUrls[i]);  
+    }
+    return strdup(shortUrl);   // if not found, return the same input 
+}
+
+// Your functions will be called as such:
+// char* s = encode(s);
+// decode(s);
