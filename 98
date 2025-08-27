@@ -1,0 +1,27 @@
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     struct TreeNode *left;
+ *     struct TreeNode *right;
+ * };
+ */
+
+bool inorder(struct TreeNode* root, long* prev) {
+    if (root == NULL) return true;
+
+    // Traverse left
+    if (!inorder(root->left, prev)) return false;
+
+    // Check current node
+    if (root->val <= *prev) return false;
+    *prev = root->val;
+
+    // Traverse right
+    return inorder(root->right, prev);
+}
+
+bool isValidBST(struct TreeNode* root) {
+    long prev = LONG_MIN;   
+    return inorder(root, &prev);
+}
