@@ -1,0 +1,168 @@
+
+typedef struct AVLNode {
+    int val;
+    int height;
+    int size;    // total nodes in subtree
+    int count;   // handle duplicates
+    struct AVLNode* left;
+    struct AVLNode* right;
+} AVLNode;
+
+typedef struct {
+    AVLNode *root;
+} MedianFinder;
+
+int height(AVLNode* node)
+{
+    if(node)return node->height;
+    else return 0;
+}
+
+int size(AVLNode* node)
+{
+    if(node)return node->size;
+    else return 0;
+}
+
+int max(int a,int b)
+{
+    return (a>b)?a:b;
+}
+
+void update(AVLNode* node) {
+    if (!node) return;
+    node->height = 1 + max(height(node->left), height(node->right));
+    node->size = node->count + size(node->left) + size(node->right);
+}
+
+int getBalanceFactor(AVLNode* node)
+{
+    if(node)return 0;
+    else
+    return height(node->left)-height(node->right);
+}
+
+AVLNode* createNode(int val) {
+    AVLNode* node = (AVLNode*)malloc(sizeof(AVLNode));
+    node->val = val;
+    node->height = 1;
+    node->size = 1;
+    node->count = 1;
+    node->left = node->right = NULL;
+    return node;
+}
+
+// --- Rotations ---
+AVLNode* rightRotate(AVLNode* y) {
+    AVLNode* x = y->left;
+    AVLNode* T2 = x->right;
+
+    x->right = y;
+    y->left = T2;
+
+    update(y);
+    update(x);
+    return x;
+}
+
+AVLNode* leftRotate(AVLNode* x) {
+    AVLNode* y = x->right;
+    AVLNode* T2 = y->left;
+
+    y->left = x;
+    x->right = T2;
+
+    update(x);
+    update(y);
+    return y;
+}
+
+AVLNode* insert(AVLNode *node,int val)
+{
+    if(!node)
+    {
+        return createNode(val);
+    }
+    if(val<node->val)
+    {
+        node->left = insert(node->left,val);
+    }
+    else if(val > node->val)
+    {
+          node->right = insert(node->right,val);
+    }
+    else
+    {
+        node->count++;
+    }
+
+    update(node);
+    int balance = getBalanceFactor(node);
+
+    if(balance > 1 && val<node->left->val)return rightRotate(node);
+    if(balance < -1 && val>node->right->val)return leftRotate(node);
+    if(balance>1 && val>node->left->val)
+    {
+        node->left = leftRotate(node->left);
+        return rightRotate(node);
+    }
+    if(balance<-1 && val<node->left->val)
+    {
+        node->right = rightRotate(node->right);
+        return leftRotate(node);
+    }
+
+return node;
+}
+
+int kth(AVLNode* node, int k) {
+    if (!node) return -1; // shouldn't happen
+
+    int leftSize = size(node->left);
+
+    if (k <= leftSize) return kth(node->left, k);
+    else if (k <= leftSize + node->count) return node->val;
+    else return kth(node->right, k - leftSize - node->count);
+}
+MedianFinder* medianFinderCreate() {
+    MedianFinder* obj = (MedianFinder*)malloc(sizeof(MedianFinder));
+    obj->root = NULL;
+    return obj;
+}
+
+void medianFinderAddNum(MedianFinder* obj, int num) {
+    obj->root = insert(obj->root,num);
+}
+
+double medianFinderFindMedian(MedianFinder* obj) {
+    int n = size(obj->root);
+      if (n % 2 == 1) {
+        return kth(obj->root, n / 2 + 1);
+    } else {
+        int a = kth(obj->root, n / 2);
+        int b = kth(obj->root, n / 2 + 1);
+        return ((double)a + b) / 2.0;
+    }
+}
+
+void freeTree(AVLNode* root)
+{
+    if(!root)return;
+    freeTree(root->left);
+    freeTree(root->right);
+    free(root);
+}
+void medianFinderFree(MedianFinder* obj) {
+    freeTree(obj->root);
+    free(obj);
+}
+
+/**
+ * Your MedianFinder struct will be instantiated and called as such:
+ * MedianFinder* obj = medianFinderCreate();
+ * medianFinderAddNum(obj, num);
+ 
+ * double param_2 = medianFinderFindMedian(obj);
+ 
+ * medianFinderFree(obj);
+*/
