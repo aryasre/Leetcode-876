@@ -1,0 +1,14 @@
+1.Why can’t Bloom Filters guarantee “yes”?
+Ans: Bloom filters are based on bit array.If all the bits in the bit array are set,it will return false positive because the bits may be set by some other elements.
+2.Why can’t we delete from a standard Bloom Filter? 
+Ans: We cannot delete from a standard bloom filter because one or more elements may get hashed to the same bit. Deleting the element and resetting the bit to 0 will affect other elements which is hashed to the same bit.
+3.What will happen if we keep adding elements without limit? 
+Ans: If we add elements without limit, all the bits in the bit array will eventually be set. Searching for an element will always return false positive case,even if the element is not present.
+4.Which is more costly: false positives or false negatives?Why?
+Ans: False negative and more costly and disastrous because they mean missing an element that is actually present.
+5.Can a Bloom Filter replace a Hash Table completely?Why/why not? 
+Ans: No because hash table stores data as key value pairs. Efficient insertion,search and deletion is possible in hash table as it return exact mapping and guaranteed lookup. It will return guaranteed yes if element is presented and return no if the element is not present.
+6.If I use only one hash function, is it still a Bloom Filter? 
+Ans: Yes it is still a bloom filter but performance will degrade. With only one hash function, too many elements map to the same set of bits, leading to higher false positive rate.Using multiple independent hash functions spreads elements better.
+7.What problems might arise? If my Bloom Filter bit array is completely filled with 1s, what will happen?
+Ans: If Bloom filter is completely filled with 1, it will always return possibly yes, that is always false positive case making the bloom filter useless as it can no longer dustinguish if element is present or not present.
