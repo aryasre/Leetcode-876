@@ -1,0 +1,171 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include <stdbool.h>
+#include<time.h>
+
+
+#define MAX_LEVEL 16
+#define P_FACTOR 0.5
+
+
+typedef struct SkiplistNode{
+    int key;
+    struct SkiplistNode **forward;
+} SkiplistNode;
+
+
+typedef struct Skiplist{
+    int level;
+    SkiplistNode *header;
+} Skiplist;
+
+// at the very top of your file, before using rand()
+/*
+__attribute__((constructor)) void init_rand() {
+    srand(time(NULL));
+}
+*/
+
+SkiplistNode* createNode(int key,int level)
+{
+    SkiplistNode* node = (SkiplistNode*)malloc(sizeof(SkiplistNode));
+    node->key = key;
+    node->forward = (SkiplistNode**)calloc(level + 1, sizeof(SkiplistNode*));
+    for(int i = 0;i<=level;i++)
+    {
+        node->forward[i] = NULL;
+    }
+    return node;
+
+}
+
+Skiplist* skiplistCreate() {
+   
+        srand(time(NULL));
+    
+    Skiplist* list = (Skiplist *)malloc(sizeof(Skiplist));
+    list->level = 0;
+    list->header = createNode(-1,MAX_LEVEL);
+    return list;
+    
+}
+
+int generateRandomLevel()
+{
+    int level = 0;
+    while((rand()/(double)RAND_MAX) < P_FACTOR && level<MAX_LEVEL)
+    {
+        level++;
+    }
+    return level;
+
+}
+bool skiplistSearch(Skiplist* obj, int target) {
+   SkiplistNode* current = obj->header;
+   for(int i = obj->level;i>=0;i--)
+   {
+    while(current->forward[i] && current->forward[i]->key<target)
+    {
+        current = current->forward[i];
+    }
+   }
+   current = current->forward[0];
+   if(current && current->key==target)
+   {
+    return true;
+   }
+   return false;
+}
+
+void skiplistAdd(Skiplist* obj, int num) {
+    SkiplistNode* update[MAX_LEVEL+1];
+    SkiplistNode* current = obj->header;
+    for(int i = obj->level;i>=0;i--)
+   {
+    while(current->forward[i] && current->forward[i]->key<num)
+    {
+        current = current->forward[i];
+    }
+    update[i] = current;
+   }
+   current = current->forward[0];
+
+   //if(current==NULL || current->key!=num)
+   //{
+    int newLevel = generateRandomLevel();
+    if(newLevel >obj->level)
+    {
+        for(int i=obj->level+1;i<=newLevel;i++)
+        {
+            update[i]=obj->header;
+        }
+        obj->level = newLevel;
+    }
+    SkiplistNode* newNode = createNode(num,newLevel);
+    for(int i = 0;i<=newLevel;i++)
+    {
+        newNode->forward[i] = update[i]->forward[i];
+        update[i]->forward[i] = newNode;
+    }
+  // }
+}
+
+bool skiplistErase(Skiplist* obj, int num) {
+     SkiplistNode* update[MAX_LEVEL+1];
+    SkiplistNode* current = obj->header;
+    for(int i = obj->level;i>=0;i--)
+   {
+    while(current->forward[i] && current->forward[i]->key<num)
+    {
+        current = current->forward[i];
+    }
+    update[i] = current;
+   }
+   current = current->forward[0];
+   
+   if(current && current->key == num)
+   {
+    for(int i =0;i<=obj->level;i++)
+    {
+        if (update[i]->forward[i] != current) break;
+        update[i]->forward[i] = current->forward[i];
+    }
+  
+    free(current->forward);
+    free(current);
+    while(obj->level > 0 && obj->header->forward[obj->level]==NULL)
+    {
+        obj->level--;
+    }
+     return true;
+   }
+   return false;
+    
+}
+
+void skiplistFree(Skiplist* obj) {
+    SkiplistNode* current = obj->header->forward[0];
+    while (current) {
+        SkiplistNode* next = current->forward[0];
+        free(current->forward);
+        free(current);
+        current = next;
+    }
+    free(obj->header->forward);
+    free(obj->header);
+    free(obj);
+}
+
+
+
+/**
+ * Your Skiplist struct will be instantiated and called as such:
+ * Skiplist* obj = skiplistCreate();
+ * bool param_1 = skiplistSearch(obj, target);
+ 
+ * skiplistAdd(obj, num);
+ 
+ * bool param_3 = skiplistErase(obj, num);
+ 
+ * skiplistFree(obj);
+*/
