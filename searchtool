@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <stddef.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <inttypes.h>
+#include <stdbool.h>
+#include<sys/stat.h>
+#include<sys/types.h>
+#include <sys/mman.h>
+
+//search for keyword
+void searchKeyword(const char *data,size_t filesize,const char *keyword)
+{
+
+    size_t length = strlen(keyword);
+  for(size_t iterator = 0;iterator + length <= filesize;++iterator)
+  {
+     if(memcmp(data+iterator,keyword,length)== 0)
+     {
+     printf("Found keyword at offset %zu\n", iterator);
+    }
+  }
+}
+
+//to print errors
+static void fatal(const char *msg)
+{
+    perror(msg);
+    exit(EXIT_FAILURE);
+}
+
+int main(int argc,char *argv[])
+{
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <file> <keyword>\n", argv[0]);
+        return 1;
+    }
+
+    const char *filename = argv[1];
+    const char *keyword = argv[2];
+
+    //open the file
+    int fd = open(filename,O_RDONLY);
+    if(fd < 0)
+    {
+        fatal("open");
+    }
+
+    //get the file size
+    struct stat st;
+    if(fstat(fd,&st) < 0)
+    {
+       fatal("fstat");
+       close(fd);
+    }
+
+  size_t filesize =  st.st_size;
+
+  //map the file to memory
+  const char *data = mmap(NULL,filesize,PROT_READ,MAP_PRIVATE,fd,0);
+  if(data == MAP_FAILED)
+  {
+    fatal("mmap(MAP_PRIVATE)");
+  }
+
+  searchKeyword(data,filesize,keyword);
+  close(fd);
+
+}
